@@ -1,61 +1,82 @@
 package controllers;
 
-//import java.util.ArrayList;
 import java.util.Collection;
+import com.google.common.base.Optional;
 import java.util.HashMap;
-//import java.util.List;
 import java.util.Map;
-
+import models.Activity;
+import models.Location;
 import models.User;
 
 public class PacemakerAPI
 {
-  //private List <User> users = new ArrayList<User>();
-  //private Map<String, User> users = new HashMap<String, User>();
-  private Map<String, User> users = new HashMap<>();
-  
+  private Map<Long,   User>   userIndex       = new HashMap<>();
+  private Map<String, User>   emailIndex      = new HashMap<>();
+  private Map<Long, Activity> activitiesIndex = new HashMap<>();
+
+  public PacemakerAPI()
+  {
+  }
+
   public Collection<User> getUsers ()
   {
-	//return users;
-    return users.values();
+    return userIndex.values();
   }
 
   public  void deleteUsers() 
   {
-    users.clear();
+    userIndex.clear();
+    emailIndex.clear();
   }
 
   public User createUser(String firstName, String lastName, String email, String password) 
   {
     User user = new User (firstName, lastName, email, password);
-    //users.add(user);
-    users.put(email, user);
+    userIndex.put(user.id, user);
+    emailIndex.put(email, user);
     return user;
   }
-  
-  public User getUser(String email) 
+
+  public User getUserByEmail(String email) 
   {
-   /* for (User user : users)
-    {
-      if (email.equals(user.email))
-        return user;
-    }
-    return null;*/
-	  return users.get(email);
+    return emailIndex.get(email);
   }
 
-  public void deleteUser(String email) 
+  public User getUser(Long id) 
   {
-   /* User foundUser = null;
-    for (User user : users)
+    return userIndex.get(id);
+  }
+
+  public void deleteUser(Long id) 
+  {
+    User user = userIndex.remove(id);
+    emailIndex.remove(user.email);
+  }
+
+  public Activity createActivity(Long id, String type, String location, double distance)
+  {
+    Activity activity = null;
+    Optional<User> user = Optional.fromNullable(userIndex.get(id));
+    if (user.isPresent())
     {
-      if (email.equals(user.email))
-        foundUser = user;
+      activity = new Activity (type, location, distance);
+      user.get().activities.put(activity.id, activity);
+      activitiesIndex.put(activity.id, activity);
     }
-    if (foundUser != null)
+    return activity;
+  }
+
+  public Activity getActivity (Long id)
+  {
+    return activitiesIndex.get(id);
+  }
+
+  public void addLocation (Long id, float latitude, float longitude)
+  {
+    Optional<Activity> activity = Optional.fromNullable(activitiesIndex.get(id));
+    if (activity.isPresent())
     {
-      users.remove(foundUser);
-    }*/
-	  users.remove(email);
+      activity.get().route.add(new Location(latitude, longitude));
+    }
   }
 }
